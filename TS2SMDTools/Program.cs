@@ -16,7 +16,15 @@ namespace TS2SMDTools
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+            if (InDebugMode())
+                Application.Run(new Form1());
+            else
+                Application.Run(new MainForm());
+        }
+
+        static bool InDebugMode()
+        {
+            return true;
         }
     }
 }
