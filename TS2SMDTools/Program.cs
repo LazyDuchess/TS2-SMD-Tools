@@ -25,6 +25,7 @@ namespace TS2SMDTools
         static bool InDebugMode()
         {
             return true;
+            //return false;
         }
     }
 }

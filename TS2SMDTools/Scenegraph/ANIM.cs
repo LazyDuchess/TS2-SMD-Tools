@@ -12,6 +12,42 @@ namespace TS2SMDTools.Scenegraph
     {
         public ushort AnimationLength;
         public List<AnimObject> AnimObjects = new List<AnimObject>();
+        
+        public Vector3 GetBoneRotationDeltaAtTimeCode(uint timeCode, string boneName)
+        {
+            var rot = Vector3.Zero;
+            foreach (var element in AnimObjects)
+            {
+                foreach (var joint in element.Joints)
+                {
+                    if (joint.Name == boneName && joint.Flags.TransformType == TransformTypes.Rotation)
+                    {
+                        foreach(var frame in joint.FrameHolder.Frames)
+                        {
+                            if (frame.TimeCode == timeCode)
+                            {
+                                switch(frame.Axis)
+                                {
+                                    case TranslationAxis.Vector3:
+                                        rot = frame.Movement;
+                                        break;
+                                    case TranslationAxis.X:
+                                        rot.X = frame.TranslationValue;
+                                        break;
+                                    case TranslationAxis.Y:
+                                        rot.Y = frame.TranslationValue;
+                                        break;
+                                    case TranslationAxis.Z:
+                                        rot.Z = frame.TranslationValue;
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return rot;
+        }
     }
     public enum TransformTypes
     {
@@ -105,7 +141,9 @@ namespace TS2SMDTools.Scenegraph
     {
         X,
         Y,
-        Z
+        Z,
+        None,
+        Vector3
     }
     public class AnimFrameHolder
     {
@@ -271,12 +309,18 @@ namespace TS2SMDTools.Scenegraph
                         {
                             for(var l=0;l<loopCount;l++)
                             {
-                                frame = new AnimFrame(0, 0, TranslationAxis.X, 0f);
+                                frame = new AnimFrame(0, 0, TranslationAxis.None, 0f);
+                                if (n == 0)
+                                    frame.Axis = TranslationAxis.X;
+                                if (n == 1)
+                                    frame.Axis = TranslationAxis.Y;
+                                if (n == 2)
+                                    frame.Axis = TranslationAxis.Z;
                                 if (size == 1)
                                 {
                                     var param = UncompressFloat(reader.ReadInt16(), transformType);
                                     frame.TranslationValue = param;
-                                    dataBlock.AnimObjects[i].Joints[j].FrameHolder.Frames.Add(frame);
+                                    //dataBlock.AnimObjects[i].Joints[j].FrameHolder.Frames.Add(frame);
                                 }
                                 else if (size == 3)
                                 {
@@ -285,25 +329,23 @@ namespace TS2SMDTools.Scenegraph
                                     reader.Skip(2);
                                     var timeCode = u1 & 0x7FFF;
                                     data.TimeCode = timeCode;
-                                    if (l == 0)
-                                        data.Movement.X = UncompressFloat(u2, transformType);
-                                    if (l == 1)
-                                        data.Movement.Y = UncompressFloat(u2, transformType);
-                                    if (l == 2)
-                                        data.Movement.Z = UncompressFloat(u2, transformType);
-                                    frame.Movement = data.Movement;
+                                    if (n == 0)
+                                        frame.Axis = TranslationAxis.X;
+                                    if (n == 1)
+                                        frame.Axis = TranslationAxis.Y;
+                                    if (n == 2)
+                                        frame.Axis = TranslationAxis.Z;
+                                    frame.TranslationValue = UncompressFloat(u2, transformType);
                                     frame.TimeCode = (uint)timeCode;
                                 }
                                 else if (size == 4)
                                 {
                                     var u1 = reader.ReadUInt16();
-
                                     data.TimeCode = u1 & 0x7FFF;
-                                    data.Movement.X = UncompressFloat(reader.ReadInt16(), transformType);
-                                    data.Movement.Y = UncompressFloat(reader.ReadInt16(), transformType);
-                                    data.Movement.Z = UncompressFloat(reader.ReadInt16(), transformType);
-                                    frame.Movement = data.Movement;
+                                    frame.Movement = new Vector3(UncompressFloat(reader.ReadInt16(), transformType), UncompressFloat(reader.ReadInt16(), transformType), UncompressFloat(reader.ReadInt16(), transformType));
+                                    frame.TranslationValue = frame.Movement.X;
                                     frame.TimeCode = (uint)data.TimeCode;
+                                    
                                 }
                                 dataBlock.AnimObjects[i].Joints[j].FrameHolder.Frames.Add(frame);
                             }
@@ -346,12 +388,18 @@ namespace TS2SMDTools.Scenegraph
 
             float UncompressFloat(int value, TransformTypes transformType)
             {
-                return (float)value;
+                //return (float)value;
                 if (transformType == TransformTypes.Rotation)
-                    return (float)Math.Round(value * 0.01562500, 6);
+                    return Deg2Rad((float)Math.Round(value * 0.01562500, 6));
                 else if (transformType == TransformTypes.Translation)
-                    return (float)Math.Round(value * 0.000976562, 6);
+                    return Deg2Rad((float)Math.Round(value * 0.000976562, 6));
                 return value;
+            }
+
+            float Deg2Rad(float degrees)
+            {
+                float radians = (float)(Math.PI / 180) * degrees;
+                return (radians);
             }
             /*
             float UncompressFloat(short value, TransformTypes transformType)

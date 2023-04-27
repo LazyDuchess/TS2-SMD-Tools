@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using TS2SMDTools.SMD;
 using TS2SMDTools.Scenegraph;
+using TS2SMDTools.Tools;
 
 namespace TS2SMDTools
 {
@@ -73,6 +74,18 @@ namespace TS2SMDTools
             var animationStringBuilder = new StringBuilder("Length: ");
             animationStringBuilder.Append(currentAnim.AnimationLength.ToString());
             MessageBox.Show(animationStringBuilder.ToString());
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            var newModel = PoseTool.TransferStartingPose(currentModel, currentAnim);
+            var fileDialog = new SaveFileDialog();
+            fileDialog.Filter = "SMD Files (*.smd)|*.smd";
+            var dialogResult = fileDialog.ShowDialog();
+            if (dialogResult != DialogResult.OK)
+                return;
+            var stream = new FileStream(fileDialog.FileName, FileMode.Create);
+            newModel.Write(stream);
         }
     }
 }

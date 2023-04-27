@@ -76,6 +76,7 @@
     <Compile Include="Tools\AutoNormals.cs" />
     <Compile Include="Tools\AutoSkin.cs" />
     <Compile Include="Tools\Helpers.cs" />
+    <Compile Include="Tools\PoseTool.cs" />
     <Compile Include="Utils.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>

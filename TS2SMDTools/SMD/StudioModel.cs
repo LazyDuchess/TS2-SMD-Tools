@@ -14,8 +14,14 @@ namespace TS2SMDTools.SMD
     /// </summary>
     public class StudioModel
     {
+        public enum ModelType
+        {
+            Reference,
+            Sequence
+        }
         static CultureInfo s_Culture = CultureInfo.InvariantCulture;
 
+        public ModelType Type = ModelType.Reference;
         public List<Node> Nodes = new List<Node>();
         public Dictionary<int, Node> NodesByID = new Dictionary<int, Node>();
         public List<Triangle> Triangles = new List<Triangle>();
@@ -162,15 +168,18 @@ namespace TS2SMDTools.SMD
                 writer.WriteLine(element.ID.ToString() + " " + Utils.FloatString(element.Position.X) + " " + Utils.FloatString(element.Position.Y) + " " + Utils.FloatString(element.Position.Z) + " " + Utils.FloatString(element.Rotation.X) + " " + Utils.FloatString(element.Rotation.Y) + " " + Utils.FloatString(element.Rotation.Z));
             }
             writer.WriteLine("end");
-            writer.WriteLine("triangles");
-            foreach(var element in Triangles)
+            if (Type == ModelType.Reference)
             {
-                writer.WriteLine("map.bmp");
-                writer.WriteLine(GetVertexString(element.Vertices[0]));
-                writer.WriteLine(GetVertexString(element.Vertices[1]));
-                writer.WriteLine(GetVertexString(element.Vertices[2]));
+                writer.WriteLine("triangles");
+                foreach (var element in Triangles)
+                {
+                    writer.WriteLine("map.bmp");
+                    writer.WriteLine(GetVertexString(element.Vertices[0]));
+                    writer.WriteLine(GetVertexString(element.Vertices[1]));
+                    writer.WriteLine(GetVertexString(element.Vertices[2]));
+                }
+                writer.WriteLine("end");
             }
-            writer.WriteLine("end");
             writer.Dispose();
 
             string GetVertexString(Vertex vertex)
